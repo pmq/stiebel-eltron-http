@@ -1,0 +1,16 @@
+{
+  "domain": "stiebel_eltron_http",
+  "name": "Stiebel Eltron",
+  "codeowners": [
+    "@pmq"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/pmq/stiebel-eltron-http",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/pmq/stiebel-eltron-http/issues",
+  "version": "0.1.0",
+  "requirements": [
+    "beautifulsoup4==4.13.0"
+  ]
+}
