@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from custom_components.stiebel_eltron_http.const import LOGGER
+
 from .scrapper import (
     StiebelEltronScrapingClientAuthenticationError,
     StiebelEltronScrapingClientError,
@@ -23,11 +25,17 @@ class StiebelEltronHttpDataUpdateCoordinator(DataUpdateCoordinator):
     config_entry: StiebelEltronHttpConfigEntry
 
     async def _async_update_data(self) -> Any:
-        """Update data via library."""
+        """Update data via the scraping client."""
         try:
-            return await self.config_entry.runtime_data.client.async_fetch_all()
+            newest_data = await self.config_entry.runtime_data.client.async_fetch_all()
+            LOGGER.debug(
+                "Scraped up-to-date data from Stiebel Eltron ISG: %s",
+                newest_data,
+            )
 
         except StiebelEltronScrapingClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except StiebelEltronScrapingClientError as exception:
             raise UpdateFailed(exception) from exception
+        else:
+            return newest_data

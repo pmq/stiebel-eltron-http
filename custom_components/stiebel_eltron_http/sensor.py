@@ -12,6 +12,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 
+from custom_components.stiebel_eltron_http.const import LOGGER
+
+from .const import (
+    OUTSIDE_TEMPERATURE_KEY,
+    ROOM_HUMIDITY_KEY,
+    ROOM_TEMPERATURE_KEY,
+)
 from .entity import StiebelEltronHttpEntity
 
 if TYPE_CHECKING:
@@ -24,7 +31,7 @@ if TYPE_CHECKING:
 
 ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
-        key="room_temperature",
+        key=ROOM_TEMPERATURE_KEY,
         name="Room temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -32,7 +39,7 @@ ENTITY_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="room_relative_humidity",
+        key=ROOM_HUMIDITY_KEY,
         name="Room relative humidity",
         icon="mdi:car-battery",
         native_unit_of_measurement=PERCENTAGE,
@@ -40,7 +47,7 @@ ENTITY_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="outside_temperature",
+        key=OUTSIDE_TEMPERATURE_KEY,
         name="Outside temperature",
         icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -57,7 +64,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     async_add_entities(
-        StiebeleEltronHttpSensor(
+        StiebelEltronHttpSensor(
             coordinator=entry.runtime_data.coordinator,
             entity_description=entity_description,
         )
@@ -65,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class StiebeleEltronHttpSensor(StiebelEltronHttpEntity, SensorEntity):
+class StiebelEltronHttpSensor(StiebelEltronHttpEntity, SensorEntity):
     """integration_blueprint Sensor class."""
 
     def __init__(
@@ -76,8 +83,15 @@ class StiebeleEltronHttpSensor(StiebelEltronHttpEntity, SensorEntity):
         """Initialize the sensor class."""
         super().__init__(coordinator, entity_description)
 
-    @property
-    def native_value(self) -> str | None:
-        """Return the native value of the sensor."""
-        # return self.coordinator.data.get("body")
-        return "20"  # Placeholder for actual sensor value
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        new_value = self.coordinator.data.get(self.entity_description.key)
+        LOGGER.debug(
+            "Sensor %s updated with new value: %s",
+            self.entity_description.key,
+            new_value,
+        )
+        # update the sensor state based on the coordinator data
+        self._attr_native_value = new_value
+
+        return super()._handle_coordinator_update()

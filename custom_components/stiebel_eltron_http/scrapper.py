@@ -9,7 +9,14 @@ import aiohttp
 import async_timeout
 import bs4
 
-from .const import EXPECTED_HTML_TITLE, HTTP_CONNECTION_TIMEOUT, LOGGER
+from .const import (
+    EXPECTED_HTML_TITLE,
+    HTTP_CONNECTION_TIMEOUT,
+    LOGGER,
+    OUTSIDE_TEMPERATURE_KEY,
+    ROOM_HUMIDITY_KEY,
+    ROOM_TEMPERATURE_KEY,
+)
 
 
 class StiebelEltronScrapingClientError(Exception):
@@ -42,6 +49,26 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     response.raise_for_status()
 
 
+def _convert_temperature(value: str) -> float | None:
+    """Convert a Stiebel Eltron ISG temperature format (23,3°C) to a float."""
+    if isinstance(value, str):
+        value = value.replace(",", ".").replace("°C", "").strip()
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _convert_percentage(value: str) -> float | None:
+    """Convert a Stiebel Eltron ISG temperature format (53,3%) to a float."""
+    if isinstance(value, str):
+        value = value.replace(",", ".").replace("%", "").strip()
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
 class StiebelEltronScrapingClient:
     """Scrape data from the Stiebel Eltron ISG web portal."""
 
@@ -57,13 +84,11 @@ class StiebelEltronScrapingClient:
     async def async_test_connect(self) -> Any:
         """Test that we can connect."""
         url = f"http://{self._host}/"
-        headers = {"User-Agent": "StiebelEltronScrapingClient/1.0"}
 
         try:
             response = await self._api_wrapper(
                 method="GET",
                 url=url,
-                headers=headers,
             )
             await self._check_title(response)
 
@@ -76,17 +101,32 @@ class StiebelEltronScrapingClient:
             return response
 
     async def async_fetch_all(self) -> Any:
-        """
-        Scrape all available data from the ISG web portal.
+        """Scrape all available data from the ISG web portal."""
+        result = {}
+        info_system_result = await self.async_scrape_info_system()
+        result.update(info_system_result)
 
-        Returns
-        -------
-        Any
-            The result of the test connection to the ISG web portal.
+        LOGGER.debug("Scraped data: %s", result)
+        return result
 
-        """
-        # do nothing special for now
-        return self.async_test_connect()
+    async def async_scrape_info_system(self) -> Any:
+        """Scrape data from the Info / System page."""
+        url = f"http://{self._host}/?s=1,0"
+
+        try:
+            response = await self._api_wrapper(
+                method="GET",
+                url=url,
+            )
+            result = await self._extract_info_system(response)
+
+        except aiohttp.ClientResponseError as exception:
+            msg = f"Failed to connect to {self._host} - {exception}"
+            raise StiebelEltronScrapingClientError(
+                msg,
+            ) from exception
+        else:
+            return result
 
     async def _check_title(self, response: str) -> None:
         """Check if the title matches the expected."""
@@ -98,15 +138,49 @@ class StiebelEltronScrapingClient:
         if not title or EXPECTED_HTML_TITLE not in title:
             raise StiebelEltronScrapingClientError(title or "No title found")
 
+    async def _extract_info_system(self, response: str) -> dict:
+        """Extract the interesting values from the Info > System page."""
+        soup = bs4.BeautifulSoup(response, "html.parser")
+        result = {}
+
+        for curr_row in soup.find_all("tr"):
+            curr_row_elems = curr_row.find_all(["td", "th"])  # type: ignore
+
+            if not curr_row_elems:
+                continue
+
+            curr_row_elems = [elem.get_text(strip=True) for elem in curr_row_elems]
+
+            # find the requested data
+            match curr_row_elems[0]:
+                case "ACTUAL TEMPERATURE 1":
+                    result[ROOM_TEMPERATURE_KEY] = _convert_temperature(
+                        curr_row_elems[1]
+                    )
+                case "OUTSIDE TEMPERATURE":
+                    result[OUTSIDE_TEMPERATURE_KEY] = _convert_temperature(
+                        curr_row_elems[1]
+                    )
+                case "RELATIVE HUMIDITY 1":
+                    result[ROOM_HUMIDITY_KEY] = _convert_percentage(curr_row_elems[1])
+                case _:
+                    # LOGGER.debug("Row data:", curr_row_elems)
+                    pass
+
+        # return the scraped data
+        LOGGER.debug("Extracted data from Info > System page: %s", result)
+        return result
+
     async def _api_wrapper(
         self,
         method: str,
         url: str,
         data: dict | None = None,
-        headers: dict | None = None,
     ) -> Any:
         """Get information from the API."""
         try:
+            headers = {"User-Agent": "StiebelEltronScrapingClient/1.0"}
+
             async with async_timeout.timeout(HTTP_CONNECTION_TIMEOUT):
                 response = await self._session.request(
                     method=method,
