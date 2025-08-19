@@ -43,7 +43,6 @@ class StiebelEltronHttpEntity(
             },
             manufacturer="Stiebel Eltron",
             model="ISG",
-            name="Test name",
             sw_version="SW1.0",
             hw_version="HW1.0",
         )
