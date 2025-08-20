@@ -6,4 +6,8 @@ NB: both integrations can run in the same HA instance.
 
 # Available data
 
-FIXME
+- Room temperature
+- Room relative humidity
+- Outside temperature
+- Total heating produced
+- Total energy consumption
