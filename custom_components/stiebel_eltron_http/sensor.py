@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfTemperature
 
 from custom_components.stiebel_eltron_http.const import LOGGER
 
@@ -18,6 +18,8 @@ from .const import (
     OUTSIDE_TEMPERATURE_KEY,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
+    TOTAL_HEATING_KEY,
+    TOTAL_POWER_CONSUMPTION_KEY,
 )
 from .entity import StiebelEltronHttpEntity
 
@@ -41,7 +43,7 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key=ROOM_HUMIDITY_KEY,
         name="Room relative humidity",
-        icon="mdi:car-battery",
+        icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -53,6 +55,22 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TOTAL_HEATING_KEY,
+        name="Total heating",
+        icon="mdi:radiator",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key=TOTAL_POWER_CONSUMPTION_KEY,
+        name="Total energy consumption",
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
     ),
 )
 

@@ -12,10 +12,14 @@ import bs4
 from .const import (
     EXPECTED_HTML_TITLE,
     HTTP_CONNECTION_TIMEOUT,
+    INFO_HEATPUMP_PATH,
+    INFO_SYSTEM_PATH,
     LOGGER,
     OUTSIDE_TEMPERATURE_KEY,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
+    TOTAL_HEATING_KEY,
+    TOTAL_POWER_CONSUMPTION_KEY,
 )
 
 
@@ -69,6 +73,25 @@ def _convert_percentage(value: str) -> float | None:
         return None
 
 
+def _convert_energy(value: str) -> float | None:
+    """Convert a Stiebel Eltron ISG energy format (24,249MWh) to a float in KWh."""
+    is_kwh = "KWh" in value
+    is_mwh = "MWh" in value
+    if not (is_kwh or is_mwh):
+        return None  # not a valid energy value
+
+    clean_value = value.replace(",", ".").replace("MWh", "").replace("KWh", "").strip()
+    try:
+        result = float(clean_value)
+        if is_mwh:
+            result *= 1000  # Convert MWh to kWh
+
+    except ValueError:
+        return None
+    else:
+        return result
+
+
 class StiebelEltronScrapingClient:
     """Scrape data from the Stiebel Eltron ISG web portal."""
 
@@ -90,7 +113,7 @@ class StiebelEltronScrapingClient:
                 method="GET",
                 url=url,
             )
-            await self._check_title(response)
+            self._check_title(response)
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -103,22 +126,26 @@ class StiebelEltronScrapingClient:
     async def async_fetch_all(self) -> Any:
         """Scrape all available data from the ISG web portal."""
         result = {}
+
         info_system_result = await self.async_scrape_info_system()
         result.update(info_system_result)
+
+        info_system_heatpump = await self.async_scrape_info_heatpump()
+        result.update(info_system_heatpump)
 
         LOGGER.debug("Scraped data: %s", result)
         return result
 
     async def async_scrape_info_system(self) -> Any:
         """Scrape data from the Info / System page."""
-        url = f"http://{self._host}/?s=1,0"
+        url = f"http://{self._host}{INFO_SYSTEM_PATH}"
 
         try:
             response = await self._api_wrapper(
                 method="GET",
                 url=url,
             )
-            result = await self._extract_info_system(response)
+            result = self._extract_info_system(response)
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -128,7 +155,26 @@ class StiebelEltronScrapingClient:
         else:
             return result
 
-    async def _check_title(self, response: str) -> None:
+    async def async_scrape_info_heatpump(self) -> Any:
+        """Scrape data from the Info / Heat Pump page."""
+        url = f"http://{self._host}{INFO_HEATPUMP_PATH}"
+
+        try:
+            response = await self._api_wrapper(
+                method="GET",
+                url=url,
+            )
+            result = self._extract_info_heatpump(response)
+
+        except aiohttp.ClientResponseError as exception:
+            msg = f"Failed to connect to {self._host} - {exception}"
+            raise StiebelEltronScrapingClientError(
+                msg,
+            ) from exception
+        else:
+            return result
+
+    def _check_title(self, response: str) -> None:
         """Check if the title matches the expected."""
         soup = bs4.BeautifulSoup(response, "html.parser")
         title = soup.title.string if soup.title and soup.title.string else None
@@ -138,7 +184,26 @@ class StiebelEltronScrapingClient:
         if not title or EXPECTED_HTML_TITLE not in title:
             raise StiebelEltronScrapingClientError(title or "No title found")
 
-    async def _extract_info_system(self, response: str) -> dict:
+    def _extract_energy(self, table, expected_header: str) -> float | None:
+        table_rows = table.find_all("tr")
+        for curr_table_row in table_rows:
+            curr_table_elems = curr_table_row.find_all(["td", "th"])
+
+            if not curr_table_elems:
+                continue
+            curr_table_elems = [elem.get_text(strip=True) for elem in curr_table_elems]
+
+            if len(curr_table_elems) < 2:  # noqa: PLR2004
+                continue
+
+            if curr_table_elems[0] == expected_header:
+                total_heat_output = _convert_energy(curr_table_elems[1])
+                LOGGER.debug(f">>> Total energy found: {total_heat_output}")
+                return total_heat_output
+
+        return None  # not found
+
+    def _extract_info_system(self, response: str) -> dict:
         """Extract the interesting values from the Info > System page."""
         soup = bs4.BeautifulSoup(response, "html.parser")
         result = {}
@@ -169,6 +234,41 @@ class StiebelEltronScrapingClient:
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)
+        return result
+
+    def _extract_info_heatpump(self, response: str) -> dict:
+        """Extract the interesting values from the Info > Heat Pump page."""
+        soup = bs4.BeautifulSoup(response, "html.parser")
+        result = {}
+
+        # find all tables
+        all_tables = soup.find_all("table")
+        # print(f"Found tables on the page: {all_tables}")
+
+        for curr_table in all_tables:
+            # print(f"Table found: {curr_table.get('id', 'No ID')}")
+            all_rows = curr_table.find_all("tr")  # type: ignore
+            # print(f"Number of rows in table: {len(all_rows)}")
+            # You can process each row as needed
+            # For example, print the first row
+            all_headers = all_rows[0].find_all(["th"])  # type: ignore
+            # print(f"Number of headers in table: {len(all_headers)}")
+            curr_headers = [header.get_text(strip=True) for header in all_headers]
+            # print("Headers:", curr_headers)
+            match curr_headers[0]:
+                case "AMOUNT OF HEAT":
+                    result[TOTAL_HEATING_KEY] = self._extract_energy(
+                        curr_table, "VD HEATING TOTAL"
+                    )
+                case "POWER CONSUMPTION":
+                    result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
+                        curr_table, "VD HEATING TOTAL"
+                    )
+                case _:
+                    print("Unknown header:", curr_headers[0])
+
+        # return the scraped data
+        LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
         return result
 
     async def _api_wrapper(
