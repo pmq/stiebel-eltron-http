@@ -2,6 +2,8 @@ Stiebel Eltron HTTP is a Home Assistant integration that connects and scrapes yo
 
 It is not meant to be a climate entity and thus cannot set the temperatures, change the modes, etc. See the official HA integration for that - but you'll need to find a way to activate Modbus on your ISG.
 
+This integration is designed to work out-of-the-box and auto-discover your Stiebel Eltron ISG device.
+
 NB: both integrations can run in the same HA instance.
 
 # Needed hardware
