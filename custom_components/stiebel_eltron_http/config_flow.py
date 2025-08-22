@@ -8,7 +8,6 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers import selector
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigFlowResult
@@ -24,8 +23,6 @@ from homeassistant.helpers.service_info.ssdp import (
 from slugify import slugify
 
 from .const import DOMAIN, LOGGER
-
-# FIXME
 from .scrapper import (
     StiebelEltronScrapingClient,
     StiebelEltronScrapingClientAuthenticationError,
@@ -93,11 +90,10 @@ class StiebelEltronIsgHttpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a SSDP discovered device."""
-        LOGGER.warning("Discovered via SSDP: %s", discovery_info)
-        LOGGER.warning("UPnP info: %s", discovery_info.upnp)
+        LOGGER.info("Discovered device with UPnP info: %s", discovery_info.upnp)
         url = urlsplit(discovery_info.upnp[ATTR_UPNP_PRESENTATION_URL])
         mac_address = format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL])
-        LOGGER.warning("MAC address: %s", mac_address)
+        LOGGER.debug("MAC address: %s", mac_address)
 
         self.config = {
             CONF_HOST: url.hostname,
