@@ -5,12 +5,21 @@
     "@pmq"
   ],
   "config_flow": true,
+  "dependencies": [
+    "ssdp"
+  ],
   "documentation": "https://github.com/pmq/stiebel-eltron-http",
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pmq/stiebel-eltron-http/issues",
   "requirements": [
     "beautifulsoup4==4.13.0"
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "STIEBEL ELTRON",
+      "modelURL": "http://www.stiebel-eltron.de/isg/"
+    }
   ],
   "version": "0.1.0"
 }
