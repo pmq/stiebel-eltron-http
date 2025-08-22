@@ -91,7 +91,7 @@ async def async_setup_entry(
 
 
 class StiebelEltronHttpSensor(StiebelEltronHttpEntity, SensorEntity):
-    """integration_blueprint Sensor class."""
+    """Stiebel Eltron HTTP Sensor class."""
 
     def __init__(
         self,

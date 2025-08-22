@@ -18,9 +18,8 @@ if TYPE_CHECKING:
     from .data import StiebelEltronHttpConfigEntry
 
 
-# https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
 class StiebelEltronHttpDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the scraping client."""
+    """Class to manage refreshing data using the scraping client."""
 
     config_entry: StiebelEltronHttpConfigEntry
 
@@ -35,7 +34,9 @@ class StiebelEltronHttpDataUpdateCoordinator(DataUpdateCoordinator):
 
         except StiebelEltronScrapingClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
+
         except StiebelEltronScrapingClientError as exception:
             raise UpdateFailed(exception) from exception
+
         else:
             return newest_data

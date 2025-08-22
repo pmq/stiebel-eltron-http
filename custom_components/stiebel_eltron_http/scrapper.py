@@ -184,10 +184,12 @@ class StiebelEltronScrapingClient:
         if not title or EXPECTED_HTML_TITLE not in title:
             raise StiebelEltronScrapingClientError(title or "No title found")
 
-    def _extract_energy(self, table, expected_header: str) -> float | None:
+    def _extract_energy(
+        self, table: bs4.element.Tag, expected_header: str
+    ) -> float | None:
         table_rows = table.find_all("tr")
         for curr_table_row in table_rows:
-            curr_table_elems = curr_table_row.find_all(["td", "th"])
+            curr_table_elems = curr_table_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
 
             if not curr_table_elems:
                 continue
@@ -209,7 +211,7 @@ class StiebelEltronScrapingClient:
         result = {}
 
         for curr_row in soup.find_all("tr"):
-            curr_row_elems = curr_row.find_all(["td", "th"])  # type: ignore
+            curr_row_elems = curr_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
 
             if not curr_row_elems:
                 continue
@@ -228,9 +230,6 @@ class StiebelEltronScrapingClient:
                     )
                 case "RELATIVE HUMIDITY 1":
                     result[ROOM_HUMIDITY_KEY] = _convert_percentage(curr_row_elems[1])
-                case _:
-                    # LOGGER.debug("Row data:", curr_row_elems)
-                    pass
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)
@@ -243,29 +242,23 @@ class StiebelEltronScrapingClient:
 
         # find all tables
         all_tables = soup.find_all("table")
-        # print(f"Found tables on the page: {all_tables}")
 
         for curr_table in all_tables:
-            # print(f"Table found: {curr_table.get('id', 'No ID')}")
-            all_rows = curr_table.find_all("tr")  # type: ignore
-            # print(f"Number of rows in table: {len(all_rows)}")
-            # You can process each row as needed
-            # For example, print the first row
-            all_headers = all_rows[0].find_all(["th"])  # type: ignore
-            # print(f"Number of headers in table: {len(all_headers)}")
+            all_rows = curr_table.find_all("tr")  # type: ignore  # noqa: PGH003
+            all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
+
             curr_headers = [header.get_text(strip=True) for header in all_headers]
-            # print("Headers:", curr_headers)
             match curr_headers[0]:
                 case "AMOUNT OF HEAT":
                     result[TOTAL_HEATING_KEY] = self._extract_energy(
-                        curr_table, "VD HEATING TOTAL"
+                        curr_table,  # type: ignore  # noqa: PGH003
+                        "VD HEATING TOTAL",
                     )
                 case "POWER CONSUMPTION":
                     result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
-                        curr_table, "VD HEATING TOTAL"
+                        curr_table,  # type: ignore  # noqa: PGH003
+                        "VD HEATING TOTAL",
                     )
-                case _:
-                    print("Unknown header:", curr_headers[0])
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
@@ -296,11 +289,13 @@ class StiebelEltronScrapingClient:
             raise StiebelEltronScrapingClientCommunicationError(
                 msg,
             ) from exception
+
         except (aiohttp.ClientError, socket.gaierror) as exception:
             msg = f"Error fetching information - {exception}"
             raise StiebelEltronScrapingClientCommunicationError(
                 msg,
             ) from exception
+
         except Exception as exception:  # pylint: disable=broad-except
             msg = f"Something really wrong happened! - {exception}"
             raise StiebelEltronScrapingClientError(
