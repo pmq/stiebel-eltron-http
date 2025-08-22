@@ -47,8 +47,12 @@ class StiebelEltronIsgHttpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _errors = {}
 
         if user_input is not None:
+            self.config = {
+                CONF_HOST: user_input[CONF_HOST],
+            }
+
             try:
-                await self._test_connect(host=user_input[CONF_HOST])
+                await self._test_connect(host=self.config[CONF_HOST])
 
             except StiebelEltronScrapingClientAuthenticationError as exception:
                 LOGGER.warning(exception)
@@ -79,14 +83,7 @@ class StiebelEltronIsgHttpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_HOST,
-                        default=(user_input or {}).get(CONF_HOST, vol.UNDEFINED),
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.TEXT,
-                        ),
-                    )
+                    vol.Required(CONF_HOST, default=self.config[CONF_HOST]): str,
                 },
             ),
             errors=_errors,
