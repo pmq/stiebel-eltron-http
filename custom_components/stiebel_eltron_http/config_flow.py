@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
@@ -95,11 +96,11 @@ class StiebelEltronIsgHttpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a SSDP discovered device."""
-        LOGGER.info("Discovered via SSDP: %s", discovery_info)
-        LOGGER.info("UPnP info: %s", discovery_info.upnp)
+        LOGGER.warning("Discovered via SSDP: %s", discovery_info)
+        LOGGER.warning("UPnP info: %s", discovery_info.upnp)
         url = urlsplit(discovery_info.upnp[ATTR_UPNP_PRESENTATION_URL])
         mac_address = format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL])
-        LOGGER.info("MAC address: %s", mac_address)
+        LOGGER.warning("MAC address: %s", mac_address)
 
         self.config = {
             CONF_HOST: url.hostname,
@@ -111,7 +112,7 @@ class StiebelEltronIsgHttpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=self.config)
 
         self.context["title_placeholders"] = {
-            CONF_NAME: discovery_info.upnp[CONF_NAME],
+            CONF_NAME: discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME],
             CONF_HOST: self.config[CONF_HOST],
         }
 
