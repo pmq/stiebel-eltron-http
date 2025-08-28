@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import socket
 from typing import Any
 
@@ -15,7 +16,9 @@ from .const import (
     INFO_HEATPUMP_PATH,
     INFO_SYSTEM_PATH,
     LOGGER,
+    MAC_ADDRESS_KEY,
     OUTSIDE_TEMPERATURE_KEY,
+    PROFILE_NETWORK_PATH,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
     TOTAL_HEATING_KEY,
@@ -123,6 +126,10 @@ class StiebelEltronScrapingClient:
         else:
             return response
 
+    async def async_get_mac_address(self) -> Any:
+        """Retrieve the MAC address from the ISG device."""
+        return await self.async_scrape_profile_network()
+
     async def async_fetch_all(self) -> Any:
         """Scrape all available data from the ISG web portal."""
         result = {}
@@ -165,6 +172,25 @@ class StiebelEltronScrapingClient:
                 url=url,
             )
             result = self._extract_info_heatpump(response)
+
+        except aiohttp.ClientResponseError as exception:
+            msg = f"Failed to connect to {self._host} - {exception}"
+            raise StiebelEltronScrapingClientError(
+                msg,
+            ) from exception
+        else:
+            return result
+
+    async def async_scrape_profile_network(self) -> Any:
+        """Scrape data from the Profile / Network page."""
+        url = f"http://{self._host}{PROFILE_NETWORK_PATH}"
+
+        try:
+            response = await self._api_wrapper(
+                method="GET",
+                url=url,
+            )
+            result = self._extract_profile_network(response)
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -262,6 +288,24 @@ class StiebelEltronScrapingClient:
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
+        return result
+
+    def _extract_profile_network(self, response: str) -> dict:
+        """Extract the interesting values from the Profile > Network page."""
+        soup = bs4.BeautifulSoup(response, "html.parser")
+        result = {}
+
+        full_text = soup.get_text()
+
+        mac_addr_pattern = re.compile(r"(?:[0-9a-fA-F]:?){12}")
+        found_mac_addresses = re.findall(mac_addr_pattern, full_text)
+        if found_mac_addresses:
+            result[MAC_ADDRESS_KEY] = found_mac_addresses[0]
+        else:
+            LOGGER.error("No MAC address found on Profile > Network page")
+
+        # return the scraped data
+        LOGGER.debug("Extracted data from Profile > Network page: %s", result)
         return result
 
     async def _api_wrapper(
