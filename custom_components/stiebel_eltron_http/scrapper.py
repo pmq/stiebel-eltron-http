@@ -225,9 +225,7 @@ class StiebelEltronScrapingClient:
                 continue
 
             if curr_table_elems[0] == expected_header:
-                total_heat_output = _convert_energy(curr_table_elems[1])
-                LOGGER.debug(f">>> Total energy found: {total_heat_output}")
-                return total_heat_output
+                return _convert_energy(curr_table_elems[1])
 
         return None  # not found
 
