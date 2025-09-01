@@ -1,6 +1,6 @@
 {
   "domain": "stiebel_eltron_http",
-  "name": "Stiebel Eltron (w/o Modbus)",
+  "name": "Stiebel Eltron",
   "codeowners": [
     "@pmq"
   ],
