@@ -17,6 +17,8 @@ class StiebelEltronHttpEntity(
 ):
     """StiebelEltronHttpEntity class."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: StiebelEltronHttpDataUpdateCoordinator,
@@ -43,5 +45,6 @@ class StiebelEltronHttpEntity(
             },
             manufacturer="Stiebel Eltron",
             model="Internet Service Gateway (ISG)",
+            name="Stiebel Eltron ISG",
             sw_version=coordinator.device_data.get(ATTR_SW_VERSION, "-"),
         )
