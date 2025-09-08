@@ -9,8 +9,10 @@ from typing import Any
 import aiohttp
 import async_timeout
 import bs4
+from homeassistant.const import ATTR_SW_VERSION
 
 from .const import (
+    DIAGNOSIS_SYSTEM_PATH,
     EXPECTED_HTML_TITLE,
     HTTP_CONNECTION_TIMEOUT,
     INFO_HEATPUMP_PATH,
@@ -126,9 +128,22 @@ class StiebelEltronScrapingClient:
         else:
             return response
 
+    async def async_get_device_info(self) -> Any:
+        """Retrieve device info from the ISG device."""
+        result = {}
+
+        result.update(await self.async_get_mac_address())
+        result.update(await self.async_get_versions())
+
+        return result
+
     async def async_get_mac_address(self) -> Any:
         """Retrieve the MAC address from the ISG device."""
         return await self.async_scrape_profile_network()
+
+    async def async_get_versions(self) -> Any:
+        """Retrieve the hardware and software versions from the ISG device."""
+        return await self.async_scrape_diagnosis_system()
 
     async def async_fetch_all(self) -> Any:
         """Scrape all available data from the ISG web portal."""
@@ -172,6 +187,25 @@ class StiebelEltronScrapingClient:
                 url=url,
             )
             result = self._extract_info_heatpump(response)
+
+        except aiohttp.ClientResponseError as exception:
+            msg = f"Failed to connect to {self._host} - {exception}"
+            raise StiebelEltronScrapingClientError(
+                msg,
+            ) from exception
+        else:
+            return result
+
+    async def async_scrape_diagnosis_system(self) -> Any:
+        """Scrape data from the Diagnosis / System page."""
+        url = f"http://{self._host}{DIAGNOSIS_SYSTEM_PATH}"
+
+        try:
+            response = await self._api_wrapper(
+                method="GET",
+                url=url,
+            )
+            result = self._extract_diagnosis_system(response)
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -228,6 +262,30 @@ class StiebelEltronScrapingClient:
                 return _convert_energy(curr_table_elems[1])
 
         return None  # not found
+
+    def _extract_version(self, table: bs4.element.Tag) -> float | str:
+        major_version, minor_version, revision = None, None, None
+
+        table_rows = table.find_all("tr")
+        for curr_table_row in table_rows:
+            curr_table_elems = curr_table_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
+
+            if not curr_table_elems:
+                continue
+            curr_table_elems = [elem.get_text(strip=True) for elem in curr_table_elems]
+
+            if len(curr_table_elems) < 2:  # noqa: PLR2004
+                continue
+
+            match curr_table_elems[0]:
+                case "Major version":
+                    major_version = curr_table_elems[1]
+                case "Minor version":
+                    minor_version = curr_table_elems[1]
+                case "Revision":
+                    revision = curr_table_elems[1]
+
+        return f"{major_version}.{minor_version}.{revision}"
 
     def _extract_info_system(self, response: str) -> dict:
         """Extract the interesting values from the Info > System page."""
@@ -286,6 +344,29 @@ class StiebelEltronScrapingClient:
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
+        return result
+
+    def _extract_diagnosis_system(self, response: str) -> dict:
+        """Extract the interesting values from the Diagnosis > System page."""
+        soup = bs4.BeautifulSoup(response, "html.parser")
+        result = {}
+
+        # find all tables
+        all_tables = soup.find_all("table")
+
+        for curr_table in all_tables:
+            all_rows = curr_table.find_all("tr")  # type: ignore  # noqa: PGH003
+            all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
+
+            curr_headers = [header.get_text(strip=True) for header in all_headers]
+            match curr_headers[0]:
+                case "ISG":
+                    result[ATTR_SW_VERSION] = self._extract_version(
+                        curr_table,  # type: ignore  # noqa: PGH003
+                    )
+
+        # return the scraped data
+        LOGGER.debug("Extracted data from Diagnosis > System page: %s", result)
         return result
 
     def _extract_profile_network(self, response: str) -> dict:

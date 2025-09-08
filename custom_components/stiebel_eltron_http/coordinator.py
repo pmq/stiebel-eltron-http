@@ -23,6 +23,25 @@ class StiebelEltronHttpDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: StiebelEltronHttpConfigEntry
 
+    async def _async_setup(self) -> None:
+        """Update data via the scraping client, loading only device info."""
+        await super()._async_setup()
+
+        try:
+            self.device_data = (
+                await self.config_entry.runtime_data.client.async_get_device_info()
+            )
+            LOGGER.debug(
+                "First scraping from Stiebel Eltron ISG: %s",
+                self.device_data,
+            )
+
+        except StiebelEltronScrapingClientAuthenticationError as exception:
+            raise ConfigEntryAuthFailed(exception) from exception
+
+        except StiebelEltronScrapingClientError as exception:
+            raise UpdateFailed(exception) from exception
+
     async def _async_update_data(self) -> Any:
         """Update data via the scraping client."""
         try:

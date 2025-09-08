@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_HOST
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from custom_components.stiebel_eltron_http.const import LOGGER
+from custom_components.stiebel_eltron_http.const import LOGGER, MAC_ADDRESS_KEY
 
 from .coordinator import StiebelEltronHttpDataUpdateCoordinator
 
@@ -16,9 +16,6 @@ class StiebelEltronHttpEntity(
     CoordinatorEntity[StiebelEltronHttpDataUpdateCoordinator], SensorEntity
 ):
     """StiebelEltronHttpEntity class."""
-
-    _attr_has_entity_name = True
-    # entity_description = "Test of a description to see if it appears somewhere"
 
     def __init__(
         self,
@@ -35,7 +32,9 @@ class StiebelEltronHttpEntity(
 
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
-            # connections={(CONNECTION_NETWORK_MAC, self.status.lan_macaddr)},
+            connections={
+                (CONNECTION_NETWORK_MAC, coordinator.device_data[MAC_ADDRESS_KEY])
+            },
             identifiers={
                 (
                     coordinator.config_entry.domain,
@@ -43,7 +42,6 @@ class StiebelEltronHttpEntity(
                 ),
             },
             manufacturer="Stiebel Eltron",
-            model="ISG",
-            sw_version="SW1.0",
-            hw_version="HW1.0",
+            model="Internet Service Gateway (ISG)",
+            sw_version=coordinator.device_data.get(ATTR_SW_VERSION, "-"),
         )

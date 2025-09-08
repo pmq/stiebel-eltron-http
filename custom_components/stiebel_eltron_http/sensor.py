@@ -103,6 +103,8 @@ class StiebelEltronHttpSensor(StiebelEltronHttpEntity, SensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        LOGGER.debug("Coordinator update received: %s", self.coordinator.data)
+
         new_value = self.coordinator.data.get(self.entity_description.key)
         LOGGER.debug(
             "Sensor %s updated with new value: %s",
