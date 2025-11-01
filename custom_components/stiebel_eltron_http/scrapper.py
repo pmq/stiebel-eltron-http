@@ -14,12 +14,14 @@ from homeassistant.const import ATTR_SW_VERSION
 from .const import (
     DIAGNOSIS_SYSTEM_PATH,
     EXPECTED_HTML_TITLE,
+    HEATING_KEY,
     HTTP_CONNECTION_TIMEOUT,
     INFO_HEATPUMP_PATH,
     INFO_SYSTEM_PATH,
     LOGGER,
     MAC_ADDRESS_KEY,
     OUTSIDE_TEMPERATURE_KEY,
+    POWER_CONSUMPTION_KEY,
     PROFILE_NETWORK_PATH,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
@@ -332,11 +334,19 @@ class StiebelEltronScrapingClient:
             curr_headers = [header.get_text(strip=True) for header in all_headers]
             match curr_headers[0]:
                 case "AMOUNT OF HEAT":
+                    result[HEATING_KEY] = self._extract_energy(
+                        curr_table,  # type: ignore  # noqa: PGH003
+                        "VD HEATING DAY",
+                    )
                     result[TOTAL_HEATING_KEY] = self._extract_energy(
                         curr_table,  # type: ignore  # noqa: PGH003
                         "VD HEATING TOTAL",
                     )
                 case "POWER CONSUMPTION":
+                    result[POWER_CONSUMPTION_KEY] = self._extract_energy(
+                        curr_table,  # type: ignore  # noqa: PGH003
+                        "VD HEATING DAY",
+                    )
                     result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
                         curr_table,  # type: ignore  # noqa: PGH003
                         "VD HEATING TOTAL",
