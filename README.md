@@ -31,16 +31,20 @@ This integration is designed to work out-of-the-box and auto-discover your Stieb
 
 </details>
 
+
 ## Provided sensors
 
 - Room temperature
 - Room relative humidity
 - Outside temperature
-- Total heating produced
-- Total energy consumption
+- Heating produced (daily reset, correctly handled by HA)
+- Total heating produced (ever)
+- Energy consumption (daily reset, correctly handled by HA)
+- Total energy consumption (ever)
 
-With the **Total energy consumption** sensor, you can add this precious data to your Energy dashboard.
+With the **Energy consumption** sensor, you can add this precious data to your Energy dashboard, to monitor the individual consumption by your heat pump. See below for example screenshots.
 
 
 ## Screenshots
-![Sensors](./screenshots/device.png)
+![All sensors](./screenshots/device.png)
+![Individual tracking](./screenshots/individual-device-tracking.png)
