@@ -415,7 +415,7 @@ class StiebelEltronScrapingClient:
                     json=data,
                 )
                 _verify_response_or_raise(response)
-                return await response.text()
+                return await response.text(encoding="utf-8", errors="replace")
 
         except TimeoutError as exception:
             msg = f"Timeout error fetching information - {exception}"
