@@ -24,3 +24,41 @@ POWER_CONSUMPTION_KEY = "power_consumption"
 
 # Other keys
 MAC_ADDRESS_KEY = "mac_address"
+
+# Text markers in the different ISG languages
+FIELDS_I18N = {
+    "ENGLISH": {
+        "MAJOR_VERSION": "Major version",
+        "MINOR_VERSION": "Minor version",
+        "REVISION": "Revision",
+        "ACTUAL TEMPERATURE 1": "ACTUAL TEMPERATURE 1",
+        "RELATIVE HUMIDITY 1": "RELATIVE HUMIDITY 1",
+        "OUTSIDE TEMPERATURE": "OUTSIDE TEMPERATURE",
+        "AMOUNT OF HEAT": "AMOUNT OF HEAT",
+        "POWER CONSUMPTION": "POWER CONSUMPTION",
+        "VD HEATING DAY": "VD HEATING DAY",
+        "VD HEATING TOTAL": "VD HEATING TOTAL",
+    },
+    "DEUTSCH": {
+        "MAJOR_VERSION": "Hauptversionsnummer",
+        "MINOR_VERSION": "Nebenversionsnummer",
+        "REVISION": "Revisionsnummer",
+        "ACTUAL TEMPERATURE 1": "ISTTEMPERATUR 1",
+        "RELATIVE HUMIDITY 1": "RAUMFEUCHTE 1",
+        "OUTSIDE TEMPERATURE": "AUSSENTEMPERATUR",
+        "AMOUNT OF HEAT": "WÄRMEMENGE",
+        "POWER CONSUMPTION": "LEISTUNGSAUFNAHME",
+        "VD HEATING DAY": "VD HEIZEN TAG",
+        "VD HEATING TOTAL": "VD HEIZEN SUMME",
+    },
+    "FRANÇAIS": "TODO",
+    "NEDERLANDS": "TODO",
+    "ITALIANO": "TODO",
+    "SVENSKA": "TODO",
+    "POLSKI": "TODO",
+    "ČEŠTINA": "TODO",
+    "MAGYAR": "TODO",
+    "ESPAÑOL": "TODO",
+    "SUOMI": "TODO",
+    "DANSK": "TODO",
+}

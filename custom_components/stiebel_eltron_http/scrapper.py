@@ -14,6 +14,7 @@ from homeassistant.const import ATTR_SW_VERSION
 from .const import (
     DIAGNOSIS_SYSTEM_PATH,
     EXPECTED_HTML_TITLE,
+    FIELDS_I18N,
     HEATING_KEY,
     HTTP_CONNECTION_TIMEOUT,
     INFO_HEATPUMP_PATH,
@@ -58,6 +59,18 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
             msg,
         )
     response.raise_for_status()
+
+
+def _get_field_i18n(field_key: str, language: str) -> str:
+    """Get the internationalized field name for a given key and language."""
+    lang_dict = FIELDS_I18N.get(language)
+    if isinstance(lang_dict, dict):
+        result = lang_dict.get(field_key)
+        if result:
+            return result
+
+    error_msg = f"Unsupported language for i18n: {language}"
+    raise ValueError(error_msg)
 
 
 def _convert_temperature(value: str) -> float | None:
@@ -121,6 +134,12 @@ class StiebelEltronScrapingClient:
                 url=url,
             )
             self._check_title(response)
+            language = self._extract_language_from_page_content(response)
+            LOGGER.debug(
+                "Connection test to %s successful, found language '%s'",
+                self._host,
+                language,
+            )
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -246,6 +265,30 @@ class StiebelEltronScrapingClient:
         if not title or EXPECTED_HTML_TITLE not in title:
             raise StiebelEltronScrapingClientError(title or "No title found")
 
+    def _extract_language_from_page_content(self, page_content: str) -> str:
+        """Extract the language from the HTML response."""
+        soup = bs4.BeautifulSoup(page_content, "html.parser")
+        return self._extract_language(soup)
+
+    def _extract_language(self, soup: bs4.BeautifulSoup) -> str:
+        """Extract the language from the HTML response."""
+        lang_divs = soup.find_all("div", class_="eingestelle_sprache")
+
+        if not lang_divs or not lang_divs[0].get_text(strip=True):
+            LOGGER.warning(
+                "No language div found, defaulting to English",
+            )
+            # try English as default
+            return "ENGLISH"
+
+        if len(lang_divs) > 1:
+            LOGGER.warning(
+                "Multiple language divs found, using the first one: %s",
+                lang_divs,
+            )
+
+        return lang_divs[0].get_text(strip=True)
+
     def _extract_energy(
         self, table: bs4.element.Tag, expected_header: str
     ) -> float | None:
@@ -265,7 +308,7 @@ class StiebelEltronScrapingClient:
 
         return None  # not found
 
-    def _extract_version(self, table: bs4.element.Tag) -> float | str:
+    def _extract_version(self, table: bs4.element.Tag, language: str) -> float | str:
         major_version, minor_version, revision = None, None, None
 
         table_rows = table.find_all("tr")
@@ -279,13 +322,12 @@ class StiebelEltronScrapingClient:
             if len(curr_table_elems) < 2:  # noqa: PLR2004
                 continue
 
-            match curr_table_elems[0]:
-                case "Major version":
-                    major_version = curr_table_elems[1]
-                case "Minor version":
-                    minor_version = curr_table_elems[1]
-                case "Revision":
-                    revision = curr_table_elems[1]
+            if curr_table_elems[0] == _get_field_i18n("MAJOR_VERSION", language):
+                major_version = curr_table_elems[1]
+            elif curr_table_elems[0] == _get_field_i18n("MINOR_VERSION", language):
+                minor_version = curr_table_elems[1]
+            elif curr_table_elems[0] == _get_field_i18n("REVISION", language):
+                revision = curr_table_elems[1]
 
         return f"{major_version}.{minor_version}.{revision}"
 
@@ -293,6 +335,10 @@ class StiebelEltronScrapingClient:
         """Extract the interesting values from the Info > System page."""
         soup = bs4.BeautifulSoup(response, "html.parser")
         result = {}
+
+        # determine language
+        language = self._extract_language(soup)
+        LOGGER.debug("Detected language on Info > System page: %s", language)
 
         for curr_row in soup.find_all("tr"):
             curr_row_elems = curr_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
@@ -303,17 +349,14 @@ class StiebelEltronScrapingClient:
             curr_row_elems = [elem.get_text(strip=True) for elem in curr_row_elems]
 
             # find the requested data
-            match curr_row_elems[0]:
-                case "ACTUAL TEMPERATURE 1":
-                    result[ROOM_TEMPERATURE_KEY] = _convert_temperature(
-                        curr_row_elems[1]
-                    )
-                case "OUTSIDE TEMPERATURE":
-                    result[OUTSIDE_TEMPERATURE_KEY] = _convert_temperature(
-                        curr_row_elems[1]
-                    )
-                case "RELATIVE HUMIDITY 1":
-                    result[ROOM_HUMIDITY_KEY] = _convert_percentage(curr_row_elems[1])
+            if curr_row_elems[0] == _get_field_i18n("ACTUAL TEMPERATURE 1", language):
+                result[ROOM_TEMPERATURE_KEY] = _convert_temperature(curr_row_elems[1])
+            elif curr_row_elems[0] == _get_field_i18n("OUTSIDE TEMPERATURE", language):
+                result[OUTSIDE_TEMPERATURE_KEY] = _convert_temperature(
+                    curr_row_elems[1]
+                )
+            elif curr_row_elems[0] == _get_field_i18n("RELATIVE HUMIDITY 1", language):
+                result[ROOM_HUMIDITY_KEY] = _convert_percentage(curr_row_elems[1])
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)
@@ -324,6 +367,10 @@ class StiebelEltronScrapingClient:
         soup = bs4.BeautifulSoup(response, "html.parser")
         result = {}
 
+        # determine language
+        language = self._extract_language(soup)
+        LOGGER.debug("Detected language on Info > Heat Pump page: %s", language)
+
         # find all tables
         all_tables = soup.find_all("table")
 
@@ -332,25 +379,25 @@ class StiebelEltronScrapingClient:
             all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
 
             curr_headers = [header.get_text(strip=True) for header in all_headers]
-            match curr_headers[0]:
-                case "AMOUNT OF HEAT":
-                    result[HEATING_KEY] = self._extract_energy(
-                        curr_table,  # type: ignore  # noqa: PGH003
-                        "VD HEATING DAY",
-                    )
-                    result[TOTAL_HEATING_KEY] = self._extract_energy(
-                        curr_table,  # type: ignore  # noqa: PGH003
-                        "VD HEATING TOTAL",
-                    )
-                case "POWER CONSUMPTION":
-                    result[POWER_CONSUMPTION_KEY] = self._extract_energy(
-                        curr_table,  # type: ignore  # noqa: PGH003
-                        "VD HEATING DAY",
-                    )
-                    result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
-                        curr_table,  # type: ignore  # noqa: PGH003
-                        "VD HEATING TOTAL",
-                    )
+
+            if curr_headers[0] == _get_field_i18n("AMOUNT OF HEAT", language):
+                result[HEATING_KEY] = self._extract_energy(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("VD HEATING DAY", language),
+                )
+                result[TOTAL_HEATING_KEY] = self._extract_energy(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("VD HEATING TOTAL", language),
+                )
+            elif curr_headers[0] == _get_field_i18n("POWER CONSUMPTION", language):
+                result[POWER_CONSUMPTION_KEY] = self._extract_energy(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("VD HEATING DAY", language),
+                )
+                result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("VD HEATING TOTAL", language),
+                )
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
@@ -360,6 +407,10 @@ class StiebelEltronScrapingClient:
         """Extract the interesting values from the Diagnosis > System page."""
         soup = bs4.BeautifulSoup(response, "html.parser")
         result = {}
+
+        # determine language
+        language = self._extract_language(soup)
+        LOGGER.debug("Detected language on Diagnosis > System page: %s", language)
 
         # find all tables
         all_tables = soup.find_all("table")
@@ -373,6 +424,7 @@ class StiebelEltronScrapingClient:
                 case "ISG":
                     result[ATTR_SW_VERSION] = self._extract_version(
                         curr_table,  # type: ignore  # noqa: PGH003
+                        language,
                     )
 
         # return the scraped data
