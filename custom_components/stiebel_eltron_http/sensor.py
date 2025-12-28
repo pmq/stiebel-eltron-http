@@ -15,6 +15,7 @@ from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfTemperature
 from custom_components.stiebel_eltron_http.const import LOGGER
 
 from .const import (
+    FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
     OUTSIDE_TEMPERATURE_KEY,
     POWER_CONSUMPTION_KEY,
@@ -89,6 +90,14 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=FLOW_TEMPERATURE_KEY,
+        name="Flow temperature",
+        icon="mdi:water-thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

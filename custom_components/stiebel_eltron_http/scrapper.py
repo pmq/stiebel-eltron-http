@@ -15,6 +15,7 @@ from .const import (
     DIAGNOSIS_SYSTEM_PATH,
     EXPECTED_HTML_TITLE,
     FIELDS_I18N,
+    FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
     HTTP_CONNECTION_TIMEOUT,
     INFO_HEATPUMP_PATH,
@@ -357,6 +358,10 @@ class StiebelEltronScrapingClient:
                 )
             elif curr_row_elems[0] == _get_field_i18n("RELATIVE HUMIDITY 1", language):
                 result[ROOM_HUMIDITY_KEY] = _convert_percentage(curr_row_elems[1])
+            elif curr_row_elems[0] == _get_field_i18n(
+                "ACTUAL TEMPERATURE HK 1", language
+            ):
+                result[FLOW_TEMPERATURE_KEY] = _convert_temperature(curr_row_elems[1])
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)
