@@ -15,6 +15,7 @@ from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfTemperature
 from custom_components.stiebel_eltron_http.const import LOGGER
 
 from .const import (
+    COMPRESSOR_STARTS_KEY,
     FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
     OUTSIDE_TEMPERATURE_KEY,
@@ -98,6 +99,14 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=COMPRESSOR_STARTS_KEY,
+        name="Compressor starts",
+        icon="mdi:heat-pump",
+        native_unit_of_measurement=None,
+        device_class=None,
+        state_class=SensorStateClass.TOTAL,
     ),
 )
 

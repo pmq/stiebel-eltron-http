@@ -12,6 +12,7 @@ import bs4
 from homeassistant.const import ATTR_SW_VERSION
 
 from .const import (
+    COMPRESSOR_STARTS_KEY,
     DIAGNOSIS_SYSTEM_PATH,
     EXPECTED_HTML_TITLE,
     FIELDS_I18N,
@@ -88,6 +89,16 @@ def _convert_percentage(value: str) -> float | None:
     """Convert a Stiebel Eltron ISG temperature format (53,3%) to a float."""
     if isinstance(value, str):
         value = value.replace(",", ".").replace("%", "").strip()
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _convert_number(value: str) -> float | None:
+    """Convert a Stiebel Eltron ISG number to a float."""
+    if isinstance(value, str):
+        value = value.replace(",", ".").strip()
     try:
         return float(value)
     except ValueError:
@@ -362,6 +373,8 @@ class StiebelEltronScrapingClient:
                 "ACTUAL TEMPERATURE HK 1", language
             ):
                 result[FLOW_TEMPERATURE_KEY] = _convert_temperature(curr_row_elems[1])
+            elif curr_row_elems[0] == _get_field_i18n("COMPRESSOR", language):
+                result[COMPRESSOR_STARTS_KEY] = _convert_number(curr_row_elems[1])
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)

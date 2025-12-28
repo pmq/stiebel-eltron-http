@@ -22,6 +22,7 @@ TOTAL_POWER_CONSUMPTION_KEY = "total_power_consumption"
 HEATING_KEY = "heating_energy"
 POWER_CONSUMPTION_KEY = "power_consumption"
 FLOW_TEMPERATURE_KEY = "flow_temperature"
+COMPRESSOR_STARTS_KEY = "compressor_starts"
 
 # Other keys
 MAC_ADDRESS_KEY = "mac_address"
@@ -40,6 +41,7 @@ FIELDS_I18N = {
         "VD HEATING DAY": "VD HEATING DAY",
         "VD HEATING TOTAL": "VD HEATING TOTAL",
         "ACTUAL TEMPERATURE HK 1": "ACTUAL TEMPERATURE HK 1",
+        "COMPRESSOR": "COMPRESSOR",
     },
     "DEUTSCH": {
         "MAJOR_VERSION": "Hauptversionsnummer",
@@ -53,6 +55,7 @@ FIELDS_I18N = {
         "VD HEATING DAY": "VD HEIZEN TAG",
         "VD HEATING TOTAL": "VD HEIZEN SUMME",
         "ACTUAL TEMPERATURE HK 1": "ISTTEMPERATUR HK 1",
+        "COMPRESSOR": "VERDICHTER",
     },
     "FRANÇAIS": "TODO",
     "NEDERLANDS": "TODO",
