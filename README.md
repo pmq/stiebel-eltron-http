@@ -37,10 +37,12 @@ This integration is designed to work out-of-the-box and auto-discover your Stieb
 - Room temperature
 - Room relative humidity
 - Outside temperature
+- Flow temperature
 - Heating produced (daily reset, correctly handled by HA)
 - Total heating produced (ever)
 - Energy consumption (daily reset, correctly handled by HA)
 - Total energy consumption (ever)
+- Compressor starts
 
 With the **Energy consumption** sensor, you can add this precious data to your Energy dashboard, to monitor the individual consumption by your heat pump. See below for example screenshots.
 
