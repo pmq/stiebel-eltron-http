@@ -320,6 +320,25 @@ class StiebelEltronScrapingClient:
 
         return None  # not found
 
+    def _extract_number(
+        self, table: bs4.element.Tag, expected_header: str
+    ) -> float | None:
+        table_rows = table.find_all("tr")
+        for curr_table_row in table_rows:
+            curr_table_elems = curr_table_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
+
+            if not curr_table_elems:
+                continue
+            curr_table_elems = [elem.get_text(strip=True) for elem in curr_table_elems]
+
+            if len(curr_table_elems) < 2:  # noqa: PLR2004
+                continue
+
+            if curr_table_elems[0] == expected_header:
+                return _convert_number(curr_table_elems[1])
+
+        return None  # not found
+
     def _extract_version(self, table: bs4.element.Tag, language: str) -> float | str:
         major_version, minor_version, revision = None, None, None
 
@@ -373,8 +392,6 @@ class StiebelEltronScrapingClient:
                 "ACTUAL TEMPERATURE HK 1", language
             ):
                 result[FLOW_TEMPERATURE_KEY] = _convert_temperature(curr_row_elems[1])
-            elif curr_row_elems[0] == _get_field_i18n("COMPRESSOR", language):
-                result[COMPRESSOR_STARTS_KEY] = _convert_number(curr_row_elems[1])
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)
@@ -415,6 +432,11 @@ class StiebelEltronScrapingClient:
                 result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
                     curr_table,  # type: ignore  # noqa: PGH003
                     _get_field_i18n("VD HEATING TOTAL", language),
+                )
+            elif curr_headers[0] == _get_field_i18n("STARTS", language):
+                result[COMPRESSOR_STARTS_KEY] = self._extract_number(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("COMPRESSOR", language),
                 )
 
         # return the scraped data
