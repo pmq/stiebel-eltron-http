@@ -28,6 +28,7 @@ from .const import (
     PROFILE_NETWORK_PATH,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
+    TARGET_FLOW_TEMPERATURE_KEY,
     TOTAL_HEATING_KEY,
     TOTAL_POWER_CONSUMPTION_KEY,
 )
@@ -392,6 +393,10 @@ class StiebelEltronScrapingClient:
                 "ACTUAL TEMPERATURE HK 1", language
             ):
                 result[FLOW_TEMPERATURE_KEY] = _convert_temperature(curr_row_elems[1])
+            elif curr_row_elems[0] == _get_field_i18n("SET TEMPERATURE HK 1", language):
+                result[TARGET_FLOW_TEMPERATURE_KEY] = _convert_temperature(
+                    curr_row_elems[1]
+                )
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > System page: %s", result)

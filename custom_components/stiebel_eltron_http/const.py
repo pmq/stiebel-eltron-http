@@ -22,6 +22,7 @@ TOTAL_POWER_CONSUMPTION_KEY = "total_power_consumption"
 HEATING_KEY = "heating_energy"
 POWER_CONSUMPTION_KEY = "power_consumption"
 FLOW_TEMPERATURE_KEY = "flow_temperature"
+TARGET_FLOW_TEMPERATURE_KEY = "target_flow_temperature"
 COMPRESSOR_STARTS_KEY = "compressor_starts"
 
 # Other keys
@@ -41,6 +42,7 @@ FIELDS_I18N = {
         "VD HEATING DAY": "VD HEATING DAY",
         "VD HEATING TOTAL": "VD HEATING TOTAL",
         "ACTUAL TEMPERATURE HK 1": "ACTUAL TEMPERATURE HK 1",
+        "SET TEMPERATURE HK 1": "SET TEMPERATURE HK 1",
         "STARTS": "STARTS",
         "COMPRESSOR": "COMPRESSOR",
     },
@@ -56,6 +58,7 @@ FIELDS_I18N = {
         "VD HEATING DAY": "VD HEIZEN TAG",
         "VD HEATING TOTAL": "VD HEIZEN SUMME",
         "ACTUAL TEMPERATURE HK 1": "ISTTEMPERATUR HK 1",
+        "SET TEMPERATURE HK 1": "SOLLTEMPERATUR HK 1",
         "STARTS": "STARTS",
         "COMPRESSOR": "VERDICHTER",
     },

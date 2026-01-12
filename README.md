@@ -38,6 +38,7 @@ This integration is designed to work out-of-the-box and auto-discover your Stieb
 - Room relative humidity
 - Outside temperature
 - Flow temperature
+- Target flow temperature
 - Heating produced (daily reset, correctly handled by HA)
 - Total heating produced (ever)
 - Energy consumption (daily reset, correctly handled by HA)
