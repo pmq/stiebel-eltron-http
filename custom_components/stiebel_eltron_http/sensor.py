@@ -22,6 +22,7 @@ from .const import (
     POWER_CONSUMPTION_KEY,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
+    TARGET_FLOW_TEMPERATURE_KEY,
     TOTAL_HEATING_KEY,
     TOTAL_POWER_CONSUMPTION_KEY,
 )
@@ -95,6 +96,14 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key=FLOW_TEMPERATURE_KEY,
         name="Flow temperature",
+        icon="mdi:water-thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TARGET_FLOW_TEMPERATURE_KEY,
+        name="Target flow temperature",
         icon="mdi:water-thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
