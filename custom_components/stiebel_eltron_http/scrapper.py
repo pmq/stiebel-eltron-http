@@ -17,8 +17,10 @@ from .const import (
     BOOSTER_HEATER_2_STATUS_KEY,
     COMPRESSOR_STARTS_KEY,
     COMPRESSOR_STATUS_KEY,
+    DEFROST_STATUS_KEY,
     DIAGNOSIS_HEAT_PUMP_STATUS_PATH,
     DIAGNOSIS_SYSTEM_PATH,
+    DIAGNOSIS_SYSTEM_STATUS_PATH,
     EXPECTED_HTML_TITLE,
     FIELDS_I18N,
     FLOW_TEMPERATURE_KEY,
@@ -199,6 +201,9 @@ class StiebelEltronScrapingClient:
         )
         result.update(diagnosis_heat_pump_status)
 
+        diagnosis_system_status = await self.async_scrape_diagnosis_system_status()
+        result.update(diagnosis_system_status)
+
         LOGGER.debug("Scraped data: %s", result)
         return result
 
@@ -231,6 +236,25 @@ class StiebelEltronScrapingClient:
                 url=url,
             )
             result = self._extract_info_heatpump(response)
+
+        except aiohttp.ClientResponseError as exception:
+            msg = f"Failed to connect to {self._host} - {exception}"
+            raise StiebelEltronScrapingClientError(
+                msg,
+            ) from exception
+        else:
+            return result
+
+    async def async_scrape_diagnosis_system_status(self) -> Any:
+        """Scrape data from the Diagnosis / System Status page."""
+        url = f"http://{self._host}{DIAGNOSIS_SYSTEM_STATUS_PATH}"
+
+        try:
+            response = await self._api_wrapper(
+                method="GET",
+                url=url,
+            )
+            result = self._extract_diagnosis_system_status(response)
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -505,6 +529,40 @@ class StiebelEltronScrapingClient:
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
+        return result
+
+    def _extract_diagnosis_system_status(self, response: str) -> dict:
+        """Extract the interesting values from the Diagnosis > System Status page."""
+        soup = bs4.BeautifulSoup(response, "html.parser")
+
+        # initialize value as 'off'
+        result = {
+            DEFROST_STATUS_KEY: False,
+        }
+
+        # determine language
+        language = self._extract_language(soup)
+        LOGGER.debug(
+            "Detected language on Diagnosis > System Status page: %s", language
+        )
+
+        # find all tables
+        all_tables = soup.find_all("table")
+
+        for curr_table in all_tables:
+            all_rows = curr_table.find_all("tr")  # type: ignore  # noqa: PGH003
+            all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
+
+            curr_headers = [header.get_text(strip=True) for header in all_headers]
+
+            if curr_headers[0] == _get_field_i18n("OPERATING MODE", language):
+                result[DEFROST_STATUS_KEY] = self._extract_boolean(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("DEFROST", language),
+                )
+
+        # return the scraped data
+        LOGGER.debug("Extracted data from Diagnosis > System Status page: %s", result)
         return result
 
     def _extract_diagnosis_heat_pump_status(self, response: str) -> dict:

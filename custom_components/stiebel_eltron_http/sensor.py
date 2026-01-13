@@ -25,6 +25,7 @@ from .const import (
     BOOSTER_HEATER_2_STATUS_KEY,
     COMPRESSOR_STARTS_KEY,
     COMPRESSOR_STATUS_KEY,
+    DEFROST_STATUS_KEY,
     FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
     OUTSIDE_TEMPERATURE_KEY,
@@ -151,6 +152,12 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS = (
         key=BOOSTER_HEATER_2_STATUS_KEY,
         name="Booster heater stage 2 status",
         icon="mdi:heat-wave",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    BinarySensorEntityDescription(
+        key=DEFROST_STATUS_KEY,
+        name="Defrost status",
+        icon="mdi:snowflake-melt",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
 )
