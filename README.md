@@ -47,6 +47,7 @@ This integration is designed to work out-of-the-box and auto-discover your Stieb
 - Compressor status (on/off)
 - Auxiliary heater status (on/off)
 - Booster heater status (on/off)
+- Defrost status (on/off)
 
 With the **Energy consumption** sensor, you can add this precious data to your Energy dashboard, to monitor the individual consumption by your heat pump. See below for example screenshots.
 
