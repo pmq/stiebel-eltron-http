@@ -10,6 +10,7 @@ EXPECTED_HTML_TITLE = "STIEBEL ELTRON Reglersteuerung"
 
 INFO_SYSTEM_PATH = "/?s=1,0"
 INFO_HEATPUMP_PATH = "/?s=1,1"
+DIAGNOSIS_HEAT_PUMP_STATUS_PATH = "/?s=2,2"
 DIAGNOSIS_SYSTEM_PATH = "/?s=2,7"
 PROFILE_NETWORK_PATH = "/?s=5,0"
 
@@ -24,6 +25,10 @@ POWER_CONSUMPTION_KEY = "power_consumption"
 FLOW_TEMPERATURE_KEY = "flow_temperature"
 TARGET_FLOW_TEMPERATURE_KEY = "target_flow_temperature"
 COMPRESSOR_STARTS_KEY = "compressor_starts"
+COMPRESSOR_STATUS_KEY = "compressor_status"
+AUXILIARY_HEATER_STATUS_KEY = "auxiliary_heater_status"
+BOOSTER_HEATER_1_STATUS_KEY = "booster_heater_1_status"
+BOOSTER_HEATER_2_STATUS_KEY = "booster_heater_2_status"
 
 # Other keys
 MAC_ADDRESS_KEY = "mac_address"
@@ -45,6 +50,10 @@ FIELDS_I18N = {
         "SET TEMPERATURE HK 1": "SET TEMPERATURE HK 1",
         "STARTS": "STARTS",
         "COMPRESSOR": "COMPRESSOR",
+        "HEAT PUMP STATUS": "HEAT PUMP STATUS",
+        "AUXILIARY HEATER": "AUXILIARY HEATER",
+        "BOOSTER HEATER STAGE 1": "BOOSTER HEATER STAGE 1",
+        "BOOSTER HEATER STAGE 2": "BOOSTER HEATER STAGE 2",
     },
     "DEUTSCH": {
         "MAJOR_VERSION": "Hauptversionsnummer",
@@ -61,6 +70,10 @@ FIELDS_I18N = {
         "SET TEMPERATURE HK 1": "SOLLTEMPERATUR HK 1",
         "STARTS": "STARTS",
         "COMPRESSOR": "VERDICHTER",
+        "HEAT PUMP STATUS": "STATUS WÄRMEPUMPE",
+        "AUXILIARY HEATER": "BEGLEITHEIZUNG",
+        "BOOSTER HEATER STAGE 1": "NHZ STUFE 1",
+        "BOOSTER HEATER STAGE 2": "NHZ STUFE 2",
     },
     "FRANÇAIS": "TODO",
     "NEDERLANDS": "TODO",

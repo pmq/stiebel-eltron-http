@@ -12,7 +12,12 @@ import bs4
 from homeassistant.const import ATTR_SW_VERSION
 
 from .const import (
+    AUXILIARY_HEATER_STATUS_KEY,
+    BOOSTER_HEATER_1_STATUS_KEY,
+    BOOSTER_HEATER_2_STATUS_KEY,
     COMPRESSOR_STARTS_KEY,
+    COMPRESSOR_STATUS_KEY,
+    DIAGNOSIS_HEAT_PUMP_STATUS_PATH,
     DIAGNOSIS_SYSTEM_PATH,
     EXPECTED_HTML_TITLE,
     FIELDS_I18N,
@@ -189,6 +194,11 @@ class StiebelEltronScrapingClient:
         info_system_heatpump = await self.async_scrape_info_heatpump()
         result.update(info_system_heatpump)
 
+        diagnosis_heat_pump_status = (
+            await self.async_scrape_diagnosis_heat_pump_status()
+        )
+        result.update(diagnosis_heat_pump_status)
+
         LOGGER.debug("Scraped data: %s", result)
         return result
 
@@ -221,6 +231,25 @@ class StiebelEltronScrapingClient:
                 url=url,
             )
             result = self._extract_info_heatpump(response)
+
+        except aiohttp.ClientResponseError as exception:
+            msg = f"Failed to connect to {self._host} - {exception}"
+            raise StiebelEltronScrapingClientError(
+                msg,
+            ) from exception
+        else:
+            return result
+
+    async def async_scrape_diagnosis_heat_pump_status(self) -> Any:
+        """Scrape data from the Diagnosis / Heat Pump Status page."""
+        url = f"http://{self._host}{DIAGNOSIS_HEAT_PUMP_STATUS_PATH}"
+
+        try:
+            response = await self._api_wrapper(
+                method="GET",
+                url=url,
+            )
+            result = self._extract_diagnosis_heat_pump_status(response)
 
         except aiohttp.ClientResponseError as exception:
             msg = f"Failed to connect to {self._host} - {exception}"
@@ -340,6 +369,36 @@ class StiebelEltronScrapingClient:
 
         return None  # not found
 
+    def _extract_boolean(self, table: bs4.element.Tag, expected_header: str) -> bool:
+        """
+        Extract a boolean flag from the given table.
+
+        Returns True if the 'on' icon is detected for the given header.
+        Returns False if another icon is detected or the header is missing
+        altogether.
+        """
+        table_rows = table.find_all("tr")
+        for curr_table_row in table_rows:
+            curr_table_elems = curr_table_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
+
+            if not curr_table_elems or len(curr_table_elems) < 2:  # noqa: PLR2004
+                continue
+
+            if curr_table_elems[0].get_text(strip=True) != expected_header:
+                continue
+
+            icon = curr_table_elems[1].find("img")
+            if not icon:
+                continue
+
+            icon_name = icon.get("src")
+            if not icon_name:
+                continue
+
+            return "ste-symbol_an-" in icon_name
+
+        return False
+
     def _extract_version(self, table: bs4.element.Tag, language: str) -> float | str:
         major_version, minor_version, revision = None, None, None
 
@@ -446,6 +505,57 @@ class StiebelEltronScrapingClient:
 
         # return the scraped data
         LOGGER.debug("Extracted data from Info > Heat Pump page: %s", result)
+        return result
+
+    def _extract_diagnosis_heat_pump_status(self, response: str) -> dict:
+        """Extract the interesting values from the Diagnosis > Heat Pump Status page."""
+        soup = bs4.BeautifulSoup(response, "html.parser")
+
+        # initialize all values as 'off'
+        result = {
+            AUXILIARY_HEATER_STATUS_KEY: False,
+            BOOSTER_HEATER_1_STATUS_KEY: False,
+            BOOSTER_HEATER_2_STATUS_KEY: False,
+            COMPRESSOR_STATUS_KEY: False,
+        }
+
+        # determine language
+        language = self._extract_language(soup)
+        LOGGER.debug(
+            "Detected language on Diagnosis > Heat Pump Status page: %s", language
+        )
+
+        # find all tables
+        all_tables = soup.find_all("table")
+
+        for curr_table in all_tables:
+            all_rows = curr_table.find_all("tr")  # type: ignore  # noqa: PGH003
+            all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
+
+            curr_headers = [header.get_text(strip=True) for header in all_headers]
+
+            if curr_headers[0] == _get_field_i18n("HEAT PUMP STATUS", language):
+                result[COMPRESSOR_STATUS_KEY] = self._extract_boolean(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("COMPRESSOR", language),
+                )
+                result[AUXILIARY_HEATER_STATUS_KEY] = self._extract_boolean(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("AUXILIARY HEATER", language),
+                )
+                result[BOOSTER_HEATER_1_STATUS_KEY] = self._extract_boolean(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("BOOSTER HEATER STAGE 1", language),
+                )
+                result[BOOSTER_HEATER_2_STATUS_KEY] = self._extract_boolean(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("BOOSTER HEATER STAGE 2", language),
+                )
+
+        # return the scraped data
+        LOGGER.debug(
+            "Extracted data from Diagnosis > Heat Pump Status page: %s", result
+        )
         return result
 
     def _extract_diagnosis_system(self, response: str) -> dict:

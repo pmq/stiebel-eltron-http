@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,7 +20,11 @@ from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfTemperature
 from custom_components.stiebel_eltron_http.const import LOGGER
 
 from .const import (
+    AUXILIARY_HEATER_STATUS_KEY,
+    BOOSTER_HEATER_1_STATUS_KEY,
+    BOOSTER_HEATER_2_STATUS_KEY,
     COMPRESSOR_STARTS_KEY,
+    COMPRESSOR_STATUS_KEY,
     FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
     OUTSIDE_TEMPERATURE_KEY,
@@ -36,7 +45,7 @@ if TYPE_CHECKING:
     from .data import StiebelEltronHttpConfigEntry
 
 
-ENTITY_DESCRIPTIONS = (
+SENSOR_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key=ROOM_TEMPERATURE_KEY,
         name="Room temperature",
@@ -119,6 +128,33 @@ ENTITY_DESCRIPTIONS = (
     ),
 )
 
+BINARY_SENSOR_ENTITY_DESCRIPTIONS = (
+    BinarySensorEntityDescription(
+        key=COMPRESSOR_STATUS_KEY,
+        name="Compressor status",
+        icon="mdi:heat-pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    BinarySensorEntityDescription(
+        key=AUXILIARY_HEATER_STATUS_KEY,
+        name="Auxiliary heater status",
+        icon="mdi:heating-coil",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    BinarySensorEntityDescription(
+        key=BOOSTER_HEATER_1_STATUS_KEY,
+        name="Booster heater stage 1 status",
+        icon="mdi:heat-wave",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    BinarySensorEntityDescription(
+        key=BOOSTER_HEATER_2_STATUS_KEY,
+        name="Booster heater stage 2 status",
+        icon="mdi:heat-wave",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
@@ -131,7 +167,14 @@ async def async_setup_entry(
             coordinator=entry.runtime_data.coordinator,
             entity_description=entity_description,
         )
-        for entity_description in ENTITY_DESCRIPTIONS
+        for entity_description in SENSOR_ENTITY_DESCRIPTIONS
+    )
+    async_add_entities(
+        StiebelEltronHttpBinarySensor(
+            coordinator=entry.runtime_data.coordinator,
+            entity_description=entity_description,
+        )
+        for entity_description in BINARY_SENSOR_ENTITY_DESCRIPTIONS
     )
 
 
@@ -158,5 +201,32 @@ class StiebelEltronHttpSensor(StiebelEltronHttpEntity, SensorEntity):
         )
         # update the sensor state based on the coordinator data
         self._attr_native_value = new_value
+
+        return super()._handle_coordinator_update()
+
+
+class StiebelEltronHttpBinarySensor(StiebelEltronHttpEntity, BinarySensorEntity):
+    """Stiebel Eltron HTTP Binary Sensor class."""
+
+    def __init__(
+        self,
+        coordinator: StiebelEltronHttpDataUpdateCoordinator,
+        entity_description: BinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the binary sensor class."""
+        super().__init__(coordinator, entity_description)
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        LOGGER.debug("Coordinator update received: %s", self.coordinator.data)
+
+        new_value = self.coordinator.data.get(self.entity_description.key)
+        LOGGER.debug(
+            "Binary sensor %s updated with new value: %s",
+            self.entity_description.key,
+            new_value,
+        )
+        # update the sensor state based on the coordinator data
+        self._attr_is_on = new_value
 
         return super()._handle_coordinator_update()

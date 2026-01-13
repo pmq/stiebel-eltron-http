@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import ATTR_SW_VERSION, CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from custom_components.stiebel_eltron_http.const import LOGGER, MAC_ADDRESS_KEY
@@ -13,7 +13,7 @@ from .coordinator import StiebelEltronHttpDataUpdateCoordinator
 
 
 class StiebelEltronHttpEntity(
-    CoordinatorEntity[StiebelEltronHttpDataUpdateCoordinator], SensorEntity
+    CoordinatorEntity[StiebelEltronHttpDataUpdateCoordinator], Entity
 ):
     """StiebelEltronHttpEntity class."""
 
@@ -22,9 +22,9 @@ class StiebelEltronHttpEntity(
     def __init__(
         self,
         coordinator: StiebelEltronHttpDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: EntityDescription,
     ) -> None:
-        """Initialize."""
+        """Initialize entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = (
