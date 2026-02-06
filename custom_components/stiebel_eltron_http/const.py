@@ -6,8 +6,13 @@ LOGGER: Logger = getLogger(__package__)
 
 DOMAIN = "stiebel_eltron_http"
 HTTP_CONNECTION_TIMEOUT = 30  # seconds
-EXPECTED_HTML_TITLE = "STIEBEL ELTRON Reglersteuerung"
 
+# Magic strings in the ISG web interface
+EXPECTED_HTML_TITLE = "STIEBEL ELTRON Reglersteuerung"  # hardcoded title in all langs
+ICON_ON_SRC = "ste-symbol_an-"  # icon src path start for "on" (as in on/off) icons
+LANGUAGE_DIV_CLASS = "eingestelle_sprache"  # div class name containing current language
+
+# URL subpaths
 INFO_SYSTEM_PATH = "/?s=1,0"
 INFO_HEATPUMP_PATH = "/?s=1,1"
 DIAGNOSIS_SYSTEM_STATUS_PATH = "/?s=2,0"

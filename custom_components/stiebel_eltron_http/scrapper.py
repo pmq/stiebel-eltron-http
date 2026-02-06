@@ -26,8 +26,10 @@ from .const import (
     FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
     HTTP_CONNECTION_TIMEOUT,
+    ICON_ON_SRC,
     INFO_HEATPUMP_PATH,
     INFO_SYSTEM_PATH,
+    LANGUAGE_DIV_CLASS,
     LOGGER,
     MAC_ADDRESS_KEY,
     OUTSIDE_TEMPERATURE_KEY,
@@ -338,7 +340,7 @@ class StiebelEltronScrapingClient:
 
     def _extract_language(self, soup: bs4.BeautifulSoup) -> str:
         """Extract the language from the HTML response."""
-        lang_divs = soup.find_all("div", class_="eingestelle_sprache")
+        lang_divs = soup.find_all("div", class_=LANGUAGE_DIV_CLASS)
 
         if not lang_divs or not lang_divs[0].get_text(strip=True):
             LOGGER.warning(
@@ -411,16 +413,15 @@ class StiebelEltronScrapingClient:
             if curr_table_elems[0].get_text(strip=True) != expected_header:
                 continue
 
-            icon = curr_table_elems[1].find("img")
+            icon = curr_table_elems[1].find("img")  # pyright: ignore[reportAttributeAccessIssue]
             if not icon:
                 continue
 
-            icon_name = icon.get("src")
-            if not icon_name:
+            icon_src = icon.get("src")  # pyright: ignore[reportAttributeAccessIssue]
+            if not icon_src:
                 continue
 
-            return "ste-symbol_an-" in icon_name
-
+            return ICON_ON_SRC in icon_src
         return False
 
     def _extract_version(self, table: bs4.element.Tag, language: str) -> float | str:
