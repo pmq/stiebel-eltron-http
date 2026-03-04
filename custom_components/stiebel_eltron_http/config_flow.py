@@ -136,6 +136,10 @@ class StiebelEltronIsgHttpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             raise StiebelEltronScrapingClientError(msg)
 
         mac_address = mac_address_result.get(MAC_ADDRESS_KEY)
+        if not mac_address:
+            msg = "Could not retrieve MAC address"
+            raise StiebelEltronScrapingClientError(msg)
+
         LOGGER.debug("Found MAC address from ISG: %s", mac_address)
 
         return mac_address

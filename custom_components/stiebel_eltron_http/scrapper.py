@@ -263,7 +263,7 @@ class StiebelEltronScrapingClient:
 
         return None  # not found
 
-    def _extract_version(self, table: bs4.element.Tag) -> float | str:
+    def _extract_version(self, table: bs4.element.Tag) -> str:
         major_version, minor_version, revision = None, None, None
 
         table_rows = table.find_all("tr")
@@ -285,6 +285,9 @@ class StiebelEltronScrapingClient:
                 case "Revision":
                     revision = curr_table_elems[1]
 
+        parts = [major_version, minor_version, revision]
+        if any(part is None for part in parts):
+            return "-"
         return f"{major_version}.{minor_version}.{revision}"
 
     def _extract_info_system(self, response: str) -> dict:
@@ -299,6 +302,9 @@ class StiebelEltronScrapingClient:
                 continue
 
             curr_row_elems = [elem.get_text(strip=True) for elem in curr_row_elems]
+
+            if len(curr_row_elems) < 2:  # noqa: PLR2004
+                continue
 
             # find the requested data
             match curr_row_elems[0]:
@@ -327,9 +333,13 @@ class StiebelEltronScrapingClient:
 
         for curr_table in all_tables:
             all_rows = curr_table.find_all("tr")  # type: ignore  # noqa: PGH003
+            if not all_rows:
+                continue
             all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
 
             curr_headers = [header.get_text(strip=True) for header in all_headers]
+            if not curr_headers:
+                continue
             match curr_headers[0]:
                 case "AMOUNT OF HEAT":
                     result[TOTAL_HEATING_KEY] = self._extract_energy(
@@ -356,9 +366,13 @@ class StiebelEltronScrapingClient:
 
         for curr_table in all_tables:
             all_rows = curr_table.find_all("tr")  # type: ignore  # noqa: PGH003
+            if not all_rows:
+                continue
             all_headers = all_rows[0].find_all(["th"])  # type: ignore  # noqa: PGH003
 
             curr_headers = [header.get_text(strip=True) for header in all_headers]
+            if not curr_headers:
+                continue
             match curr_headers[0]:
                 case "ISG":
                     result[ATTR_SW_VERSION] = self._extract_version(
@@ -376,7 +390,7 @@ class StiebelEltronScrapingClient:
 
         full_text = soup.get_text()
 
-        mac_addr_pattern = re.compile(r"(?:[0-9a-fA-F]:?){12}")
+        mac_addr_pattern = re.compile(r"(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}")
         found_mac_addresses = re.findall(mac_addr_pattern, full_text)
         if found_mac_addresses:
             result[MAC_ADDRESS_KEY] = found_mac_addresses[0]

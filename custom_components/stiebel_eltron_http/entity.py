@@ -32,11 +32,14 @@ class StiebelEltronHttpEntity(
         )
         LOGGER.debug("Setting this sensor unique_id to %s", self._attr_unique_id)
 
+        mac_address = coordinator.device_data.get(MAC_ADDRESS_KEY)
+        connections = (
+            {(CONNECTION_NETWORK_MAC, mac_address)} if mac_address else set()
+        )
+
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
-            connections={
-                (CONNECTION_NETWORK_MAC, coordinator.device_data[MAC_ADDRESS_KEY])
-            },
+            connections=connections,
             identifiers={
                 (
                     coordinator.config_entry.domain,
