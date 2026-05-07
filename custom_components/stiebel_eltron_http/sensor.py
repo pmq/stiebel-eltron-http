@@ -30,6 +30,7 @@ from .const import (
     HEATING_KEY,
     OUTSIDE_TEMPERATURE_KEY,
     POWER_CONSUMPTION_KEY,
+    POWER_CONSUMPTION_DHW_KEY,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
     TARGET_FLOW_TEMPERATURE_KEY,
@@ -90,6 +91,14 @@ SENSOR_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key=POWER_CONSUMPTION_KEY,
         name="Energy consumption",
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key=POWER_CONSUMPTION_DHW_KEY,
+        name="Energy consumption DHW",
         icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
