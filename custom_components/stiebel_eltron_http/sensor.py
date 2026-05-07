@@ -36,6 +36,7 @@ from .const import (
     TARGET_FLOW_TEMPERATURE_KEY,
     TOTAL_HEATING_KEY,
     TOTAL_POWER_CONSUMPTION_KEY,
+    TOTAL_POWER_CONSUMPTION_DHW_KEY
 )
 from .entity import StiebelEltronHttpEntity
 
@@ -107,6 +108,14 @@ SENSOR_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TOTAL_POWER_CONSUMPTION_KEY,
         name="Total energy consumption",
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=TOTAL_POWER_CONSUMPTION_DHW_KEY,
+        name="Total energy consumption DHW",
         icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
