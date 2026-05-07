@@ -525,7 +525,7 @@ class StiebelEltronScrapingClient:
                 )
                 result[POWER_CONSUMPTION_DHW_KEY] = self._extract_energy(
                     curr_table,  # type: ignore  # noqa: PGH003
-                    _get_field_i18n("VD HEATING DAY", language),
+                    _get_field_i18n("VD DHW DAY", language),
                 )
                 result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
                     curr_table,  # type: ignore  # noqa: PGH003
