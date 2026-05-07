@@ -42,6 +42,7 @@ from .const import (
     TARGET_FLOW_TEMPERATURE_KEY,
     TOTAL_HEATING_KEY,
     TOTAL_POWER_CONSUMPTION_KEY,
+    TOTAL_POWER_CONSUMPTION_DHW_KEY,
 )
 
 
@@ -530,6 +531,10 @@ class StiebelEltronScrapingClient:
                 result[TOTAL_POWER_CONSUMPTION_KEY] = self._extract_energy(
                     curr_table,  # type: ignore  # noqa: PGH003
                     _get_field_i18n("VD HEATING TOTAL", language),
+                )
+                result[TOTAL_POWER_CONSUMPTION_DHW_KEY] = self._extract_energy(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("VD DHW TOTAL", language),
                 )
             elif curr_headers[0] == _get_field_i18n("STARTS", language):
                 result[COMPRESSOR_STARTS_KEY] = self._extract_number(
