@@ -35,6 +35,7 @@ from .const import (
     MAC_ADDRESS_KEY,
     OUTSIDE_TEMPERATURE_KEY,
     POWER_CONSUMPTION_KEY,
+    POWER_CONSUMPTION_DHW_KEY,
     PROFILE_NETWORK_PATH,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
@@ -519,6 +520,10 @@ class StiebelEltronScrapingClient:
                 )
             elif curr_headers[0] == _get_field_i18n("POWER CONSUMPTION", language):
                 result[POWER_CONSUMPTION_KEY] = self._extract_energy(
+                    curr_table,  # type: ignore  # noqa: PGH003
+                    _get_field_i18n("VD HEATING DAY", language),
+                )
+                result[POWER_CONSUMPTION_DHW_KEY] = self._extract_energy(
                     curr_table,  # type: ignore  # noqa: PGH003
                     _get_field_i18n("VD HEATING DAY", language),
                 )
