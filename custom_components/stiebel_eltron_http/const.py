@@ -9,6 +9,7 @@ HTTP_CONNECTION_TIMEOUT = 30  # seconds
 
 # Magic strings in the ISG web interface
 EXPECTED_HTML_TITLE = "STIEBEL ELTRON Reglersteuerung"  # hardcoded title in all langs
+EXPECTED_TECALOR_HTML_TITLE = "TECALOR Reglersteuerung"  # title for Tecalor branded ISG
 ICON_ON_SRC = "ste-symbol_an-"  # icon src path start for "on" (as in on/off) icons
 LANGUAGE_DIV_CLASS = "eingestelle_sprache"  # div class name containing current language
 

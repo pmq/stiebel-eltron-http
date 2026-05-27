@@ -22,6 +22,7 @@ from .const import (
     DIAGNOSIS_SYSTEM_PATH,
     DIAGNOSIS_SYSTEM_STATUS_PATH,
     EXPECTED_HTML_TITLE,
+    EXPECTED_TECALOR_HTML_TITLE,
     FIELDS_I18N,
     FLOW_TEMPERATURE_KEY,
     HEATING_KEY,
@@ -330,8 +331,11 @@ class StiebelEltronScrapingClient:
         LOGGER.debug(
             "Potential ISG replied with an HTML doc containing title: %s", title
         )
-        if not title or EXPECTED_HTML_TITLE not in title:
-            raise StiebelEltronScrapingClientError(title or "No title found")
+        if not title:
+            error_msg = "No title found, this does not look like an ISG device"
+            raise StiebelEltronScrapingClientError(error_msg)
+        if not (EXPECTED_HTML_TITLE in title or EXPECTED_TECALOR_HTML_TITLE in title):
+            raise StiebelEltronScrapingClientError(title)
 
     def _extract_language_from_page_content(self, page_content: str) -> str:
         """Extract the language from the HTML response."""
