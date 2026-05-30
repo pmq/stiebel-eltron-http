@@ -43,7 +43,9 @@ It has also been reported to work with some Tecalor-branded ISG devices, like WP
 - Heating produced (daily reset, correctly handled by HA)
 - Total heating produced (ever)
 - Energy consumption (daily reset, correctly handled by HA)
+- Energy consumption for Domestic Hot Water (daily reset, correctly handled by HA)
 - Total energy consumption (ever)
+- Total energy consumption for Domestic Hot Water (ever)
 - Compressor starts
 - Compressor status (on/off)
 - Auxiliary heater status (on/off)
@@ -51,6 +53,8 @@ It has also been reported to work with some Tecalor-branded ISG devices, like WP
 - Defrost status (on/off)
 
 With the **Energy consumption** sensor, you can add this precious data to your Energy dashboard, to monitor the individual consumption by your heat pump. See below for example screenshots.
+
+If you also use your system for DHW (Domestic Hot Water), you can also use the **Energy consumption DHW** sensor to monitor also the energy spent specifically for this purpose.
 
 
 ## Screenshots
