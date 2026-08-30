@@ -47,7 +47,7 @@ class InfoSystemParserTests(TestCase):
                 self.assertEqual(result[TARGET_DHW_TEMPERATURE_KEY], target_temperature)
 
     def test_ignores_generic_temperature_rows_outside_dhw_table(self) -> None:
-        """Generic labels in another table do not overwrite DHW readings."""
+        """Nested generic rows in a layout table do not override DHW readings."""
         response = (FIXTURE_DIR / "info_system_en.html").read_text(encoding="utf-8")
 
         result = self.client._extract_info_system(response)
