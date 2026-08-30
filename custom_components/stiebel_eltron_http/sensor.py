@@ -77,7 +77,7 @@ SENSOR_ENTITY_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=DHW_TEMPERATURE_KEY,
-        name="DHW temperature",
+        name="Domestic hot water temperature",
         icon="mdi:water-thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -85,7 +85,7 @@ SENSOR_ENTITY_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TARGET_DHW_TEMPERATURE_KEY,
-        name="Target DHW temperature",
+        name="Target domestic hot water temperature",
         icon="mdi:water-thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,

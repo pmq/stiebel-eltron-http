@@ -409,7 +409,10 @@ class StiebelEltronScrapingClient:
         """Extract a temperature from a row in the given table."""
         table_rows = table.find_all("tr")
         for curr_table_row in table_rows:
-            curr_table_elems = curr_table_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
+            if curr_table_row.find_parent("table") is not table:
+                continue
+
+            curr_table_elems = curr_table_row.find_all(["td", "th"], recursive=False)  # type: ignore  # noqa: PGH003
 
             if len(curr_table_elems) < 2:  # noqa: PLR2004
                 continue
@@ -423,9 +426,12 @@ class StiebelEltronScrapingClient:
         self, soup: bs4.BeautifulSoup, expected_header: str
     ) -> bs4.element.Tag | None:
         """Find a table by its first heading without assuming a fixed layout."""
-        for table in soup.find_all("table"):
-            header = table.find("th")
-            if header and header.get_text(strip=True) == expected_header:
+        for header in soup.find_all("th"):
+            if header.get_text(strip=True) != expected_header:
+                continue
+
+            table = header.find_parent("table")
+            if isinstance(table, bs4.element.Tag) and table.find("th") is header:
                 return table
 
         return None
