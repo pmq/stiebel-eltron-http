@@ -18,6 +18,7 @@ from .const import (
     COMPRESSOR_STARTS_KEY,
     COMPRESSOR_STATUS_KEY,
     DEFROST_STATUS_KEY,
+    DHW_TEMPERATURE_KEY,
     DIAGNOSIS_HEAT_PUMP_STATUS_PATH,
     DIAGNOSIS_SYSTEM_PATH,
     DIAGNOSIS_SYSTEM_STATUS_PATH,
@@ -39,6 +40,7 @@ from .const import (
     PROFILE_NETWORK_PATH,
     ROOM_HUMIDITY_KEY,
     ROOM_TEMPERATURE_KEY,
+    TARGET_DHW_TEMPERATURE_KEY,
     TARGET_FLOW_TEMPERATURE_KEY,
     TOTAL_HEATING_KEY,
     TOTAL_POWER_CONSUMPTION_DHW_KEY,
@@ -401,6 +403,33 @@ class StiebelEltronScrapingClient:
 
         return None  # not found
 
+    def _extract_temperature(
+        self, table: bs4.element.Tag, expected_header: str
+    ) -> float | None:
+        """Extract a temperature from a row in the given table."""
+        table_rows = table.find_all("tr")
+        for curr_table_row in table_rows:
+            curr_table_elems = curr_table_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
+
+            if len(curr_table_elems) < 2:  # noqa: PLR2004
+                continue
+
+            if curr_table_elems[0].get_text(strip=True) == expected_header:
+                return _convert_temperature(curr_table_elems[1].get_text(strip=True))
+
+        return None
+
+    def _find_table(
+        self, soup: bs4.BeautifulSoup, expected_header: str
+    ) -> bs4.element.Tag | None:
+        """Find a table by its first heading without assuming a fixed layout."""
+        for table in soup.find_all("table"):
+            header = table.find("th")
+            if header and header.get_text(strip=True) == expected_header:
+                return table
+
+        return None
+
     def _extract_boolean(self, table: bs4.element.Tag, expected_header: str) -> bool:
         """
         Extract a boolean flag from the given table.
@@ -461,6 +490,17 @@ class StiebelEltronScrapingClient:
         # determine language
         language = self._extract_language(soup)
         LOGGER.debug("Detected language on Info > System page: %s", language)
+
+        dhw_table = self._find_table(soup, _get_field_i18n("DHW", language))
+        if dhw_table:
+            result[DHW_TEMPERATURE_KEY] = self._extract_temperature(
+                dhw_table,
+                _get_field_i18n("DHW ACTUAL TEMPERATURE", language),
+            )
+            result[TARGET_DHW_TEMPERATURE_KEY] = self._extract_temperature(
+                dhw_table,
+                _get_field_i18n("DHW SET TEMPERATURE", language),
+            )
 
         for curr_row in soup.find_all("tr"):
             curr_row_elems = curr_row.find_all(["td", "th"])  # type: ignore  # noqa: PGH003
