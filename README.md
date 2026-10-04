@@ -40,6 +40,8 @@ It has also been reported to work with some Tecalor-branded ISG devices, like WP
 - Outside temperature
 - Flow temperature
 - Target flow temperature
+- Domestic hot water temperature
+- Target domestic hot water temperature
 - Heating produced (daily reset, correctly handled by HA)
 - Total heating produced (ever)
 - Energy consumption (daily reset, correctly handled by HA)
