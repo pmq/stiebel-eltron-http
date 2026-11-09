@@ -1,6 +1,9 @@
 {
   "domain": "stiebel_eltron_http",
   "name": "Stiebel Eltron",
+  "categories": [
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": [
     "@pmq"
   ],
