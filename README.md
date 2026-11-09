@@ -58,6 +58,9 @@ With the **Energy consumption** sensor, you can add this precious data to your E
 
 If you also use your system for DHW (Domestic Hot Water), you can also use the **Energy consumption DHW** sensor to monitor also the energy spent specifically for this purpose.
 
+## Troubleshooting
+
+The integration supports Home Assistant [diagnostics](https://www.home-assistant.io/integrations/diagnostics/). Go to **Settings → Devices & services → Stiebel Eltron**, open the three-dot menu of the entry (or of the ISG device) and choose **Download diagnostics**. The resulting JSON file contains the config entry, the coordinator state and the last values scraped from the ISG, and is what the [bug report template](.github/ISSUE_TEMPLATE/bug.yml) asks for. The IP address, MAC address and unique ID of your ISG are redacted automatically.
 
 ## Screenshots
 ![All sensors](./screenshots/device.png)
