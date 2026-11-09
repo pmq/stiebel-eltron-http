@@ -13,7 +13,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pmq/stiebel-eltron-http/issues",
   "requirements": [
-    "beautifulsoup4==4.13.0"
+    "beautifulsoup4>=4.13.0"
   ],
   "ssdp": [
     {
